@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.friedhofsender.app.audio.MusicPlayer
 import de.friedhofsender.app.audio.TtsController
-import de.friedhofsender.app.data.GroqRepository
 import de.friedhofsender.app.data.WebRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,6 @@ class MainViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val musicPlayer: MusicPlayer,
     private val webRepository: WebRepository,
-    private val groqRepository: GroqRepository,
     private val tts: TtsController
 ) : ViewModel() {
     private val _isSpeaking = MutableStateFlow(false)
@@ -102,7 +100,6 @@ class MainViewModel @Inject constructor(
     fun toggleMute() {
         _isMuted.value = !_isMuted.value
         tts.setMute(_isMuted.value)
-
         val volume = if (_isMuted.value) 0f else _musicVolume.value
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_MUSIC)
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_LIVE)
@@ -119,29 +116,21 @@ class MainViewModel @Inject constructor(
         if (!_isMuted.value) tts.setVolume(v)
     }
     fun generate() {
-            val currentTopic = _topicInput.value
-            viewModelScope.launch {
-                _status.value = "Empfange..."
-                _isNoise.value = true
-                try {
-                    // Holt den Basis-Prompt und hängt das Thema im ViewModel an, 
-                    // falls dein WebRepository.getPrompt() keinen Parameter akzeptiert
-                    val basePrompt = webRepository.getPrompt()
-                    val prompt = if (currentTopic.isNotBlank()) {
-                        "$basePrompt Zusätzlicher Fokus/Themenwunsch für diese Ausgabe, der unbedingt integriert werden muss: \"$currentTopic\"."
-                    } else {
-                        basePrompt
-                    }            
-                    _text.value = groqRepository.generateBroadcast(prompt)
-                } catch (e: Exception) {
-                    _text.value = "Übertragungsfehler."
-                } finally {
-                    delay(1500)
-                    _isNoise.value = false
-                    _status.value = "Bereit."
-                }
+        val currentTopic = _topicInput.value
+        viewModelScope.launch {
+            _status.value = "Empfange..."
+            _isNoise.value = true
+            try {
+                _text.value = webRepository.generateBroadcast(currentTopic)
+            } catch (e: Exception) {
+                _text.value = "Übertragungsfehler: ${e.message}"
+            } finally {
+                delay(1500)
+                _isNoise.value = false
+                _status.value = "Bereit."
             }
         }
+    }
     fun toggleMusic() {
         if (_isPlaying.value) {
             musicPlayer.stop(MusicPlayer.STREAM_TYPE_MUSIC)

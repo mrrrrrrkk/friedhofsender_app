@@ -2,12 +2,15 @@ package de.friedhofsender.app.data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 @Singleton
 class WebRepository @Inject constructor() {
     private val jsonUrl = "https://www.friedhofsender.de/live/nowplaying.json"
+    private val apiGenerateUrl = "https://api.friedhofsender.de/generate"
     suspend fun getNowPlaying(): String = withContext(Dispatchers.IO) {
         try {
             val jsonString = URL(jsonUrl).readText()
@@ -16,6 +19,45 @@ class WebRepository @Inject constructor() {
             currentTrack.trim().takeUnless { it.isBlank() } ?: "Unbekannt"
         } catch (e: Exception) {
             "Fehler beim Laden"
+        }
+    }
+    suspend fun generateBroadcast(topic: String): String = withContext(Dispatchers.IO) {
+        try {
+            val basePrompt = getPrompt()
+            val prompt = if (topic.isNotBlank()) {
+                "$basePrompt Zusätzlicher Fokus/Themenwunsch für diese Ausgabe, der unbedingt integriert werden muss: \"$topic\"."
+            } else {
+                basePrompt
+            }
+            val url = URL(apiGenerateUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            connection.setRequestProperty("Accept", "application/json")
+            connection.doOutput = true
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
+            val jsonBody = JSONObject().apply {
+                put("prompt", prompt)
+            }.toString()
+            OutputStreamWriter(connection.outputStream, "UTF-8").use { writer ->
+                writer.write(jsonBody)
+                writer.flush()
+            }
+            val responseCode = connection.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val responseString = connection.inputStream.bufferedReader().use { it.readText() }
+                val responseObj = JSONObject(responseString)
+                responseObj.optString("text", "").takeIf { it.isNotBlank() } 
+                    ?: responseObj.optString("error", "Keine Antwort erhalten.")
+            } else {
+                val errorString = try {
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                } catch (_: Exception) { "" }
+                "[SERVER-FEHLER $responseCode] $errorString"
+            }
+        } catch (e: Exception) {
+            "Übertragungsfehler: ${e.message}"
         }
     }
     suspend fun getPrompt(): String = withContext(Dispatchers.IO) {
