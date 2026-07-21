@@ -38,12 +38,17 @@ android {
         )
 
     signingConfigs {
-            create("release") {
-                storeFile = file("E:/AndroidStudioProjects/my-release-key.jks")
-                storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString() ?: ""
-                keyAlias = project.findProperty("KEY_ALIAS")?.toString() ?: "Mark Reichart"
-                keyPassword = project.findProperty("KEY_PASSWORD")?.toString() ?: ""
-            }
+        create("release") {
+            val githubKeystore = file("my-release-key.jks")
+            val localKeystore = file("E:/AndroidStudioProjects/my-release-key.jks")
+
+            // Nimm die aus Base64 erzeugte Datei von GitHub, falls vorhanden:
+            storeFile = if (githubKeystore.exists()) githubKeystore else localKeystore
+
+            storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString() ?: ""
+            keyAlias = project.findProperty("KEY_ALIAS")?.toString() ?: ""
+            keyPassword = project.findProperty("KEY_PASSWORD")?.toString() ?: ""
+        }
     }
 
     buildTypes {
