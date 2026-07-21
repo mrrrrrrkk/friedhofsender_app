@@ -1,0 +1,61 @@
+name: Friedhofsender Desktop Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  release:
+    types: [created]
+
+jobs:
+  build-windows:
+    runs-name: Windows Build
+    runs-on: windows-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Windows MSI & EXE paketieren
+        run: ./gradlew :desktop:packageMsi :desktop:packageBin
+
+      - name: Windows Artefakte hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Friedhofsender-Windows-Binaries
+          path: desktop/build/compose/binaries/main/
+
+  build-linux:
+    runs-name: Linux Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Benötigte Linux-Bibliotheken für Compose Desktop installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev xorg-dev
+
+      - name: JDK einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Linux Paket (Deb) erstellen
+        run: ./gradlew :desktop:packageDeb
+
+      - name: Linux Artefakte hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Friedhofsender-Linux-Binaries
+          path: desktop/build/compose/binaries/main/

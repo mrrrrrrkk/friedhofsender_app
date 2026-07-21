@@ -5,8 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
-    // Compose Compiler Plugin für Kotlin 2.0+
-    alias(libs.plugins.compose.compiler) optional
 }
 
 // local.properties laden
@@ -43,7 +41,6 @@ android {
             val githubKeystore = file("my-release-key.jks")
             val localKeystore = file("E:/AndroidStudioProjects/my-release-key.jks")
 
-            // Nimm die aus Base64 erzeugte Datei von GitHub, falls vorhanden:
             storeFile = if (githubKeystore.exists()) githubKeystore else localKeystore
 
             storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString() ?: ""
@@ -92,7 +89,6 @@ android {
 }
 
 dependencies {
-    // Shared Multiplatform Modul eingebunden
     implementation(project(":shared"))
 
     implementation(libs.core.ktx)
