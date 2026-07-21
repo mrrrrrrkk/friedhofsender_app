@@ -1,0 +1,42 @@
+name: Android Release Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Erlaubt auch manuelles Starten auf GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Gradle Executable-Rechte setzen
+        run: chmod +x gradlew
+
+      - name: Keystore aus Secret wiederherstellen
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/my-release-key.jks
+
+      - name: Release APK bauen & signieren
+        run: |
+          ./gradlew :app:assembleRelease \
+            -PKEYSTORE_PASSWORD="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -PKEY_ALIAS="${{ secrets.KEY_ALIAS }}" \
+            -PKEY_PASSWORD="${{ secrets.KEY_PASSWORD }}"
+
+      - name: Signierte APK als Artifact hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: FriedhofsenderApp-Release
+          path: app/build/outputs/apk/release/Friedhofsender.apk
