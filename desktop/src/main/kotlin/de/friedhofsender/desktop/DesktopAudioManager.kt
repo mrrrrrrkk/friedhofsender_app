@@ -65,6 +65,13 @@ class DesktopAudioManager {
                     return@launch
                 }
 
+                val osName = System.getProperty("os.name").lowercase()
+                if (!osName.contains("win")) {
+                    println("TTS wird auf diesem Betriebssystem ($osName) aktuell nicht unterstützt.")
+                    delay(1500) // Simuliert eine kurze Sprachdauer für das UI
+                    return@launch
+                }
+
                 val base64Text = Base64.getEncoder().encodeToString(cleanText.toByteArray(StandardCharsets.UTF_8))
                 val tempScript = File.createTempFile("friedhof_tts_", ".ps1")
                 tempScript.deleteOnExit()
@@ -118,7 +125,10 @@ class DesktopAudioManager {
             speakProcess?.let {
                 it.destroyForcibly()
                 if (it.isAlive) {
-                    ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                    val osName = System.getProperty("os.name").lowercase()
+                    if (osName.contains("win")) {
+                        ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                    }
                 }
             }
             speakProcess = null
@@ -166,7 +176,10 @@ class DesktopAudioManager {
                 oldProcess?.let {
                     it.destroyForcibly()
                     if (it.isAlive) {
-                        ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                        val osName = System.getProperty("os.name").lowercase()
+                        if (osName.contains("win")) {
+                            ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                        }
                     }
                 }
 
@@ -182,7 +195,10 @@ class DesktopAudioManager {
             streamProcess?.let {
                 it.destroyForcibly()
                 if (it.isAlive) {
-                    ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                    val osName = System.getProperty("os.name").lowercase()
+                    if (osName.contains("win")) {
+                        ProcessBuilder("taskkill", "/f", "/pid", it.pid().toString()).start()
+                    }
                 }
             }
             streamProcess = null
@@ -195,7 +211,10 @@ class DesktopAudioManager {
         audioScope.cancel()
         
         try {
-            ProcessBuilder("taskkill", "/f", "/im", "ffplay.exe").start()
+            val osName = System.getProperty("os.name").lowercase()
+            if (osName.contains("win")) {
+                ProcessBuilder("taskkill", "/f", "/im", "ffplay.exe").start()
+            }
         } catch (_: Exception) {}
     }
 
@@ -205,6 +224,8 @@ class DesktopAudioManager {
         }
 
         if (!ffplayExe.exists()) {
+            // Hinweis: Für Windows wird ffplay geladen. Für Linux bräuchte man ggf. die Linux-Binary von ffbinaries, 
+            // oder man setzt voraus, dass ffmpeg/ffplay paketweit über apt installiert ist.
             val downloadUrl = "https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v4.4.1/ffplay-4.4.1-win-64.zip"
             val tempZip = File(appDir, "ffplay.zip")
 
