@@ -1,4 +1,4 @@
-name: Friedhofsender Full Build (Windows, Linux, macOS, Android)
+name: Friedhofsender macOS Build
 
 on:
   push:
@@ -10,64 +10,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    name: Windows Build
-    runs-on: windows-latest
-    steps:
-      - name: Repository auschecken
-        uses: actions/checkout@v4
-
-      - name: JDK einrichten
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Gradle Wrapper Ausführungsrechte (Git Bash)
-        shell: bash
-        run: chmod +x gradlew
-
-      - name: Windows MSI & EXE paketieren
-        run: ./gradlew :desktop:packageMsi :desktop:packageExe
-
-      - name: Windows Artefakte hochladen
-        uses: actions/upload-artifact@v4
-        with:
-          name: Friedhofsender-Windows-Binaries
-          path: desktop/build/compose/binaries/main/
-
-  build-linux:
-    name: Linux Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repository auschecken
-        uses: actions/checkout@v4
-
-      - name: Benötigte Linux-Bibliotheken für Compose Desktop installieren
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev xorg-dev
-
-      - name: JDK einrichten
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Gradle-Wrapper Ausführungsrechte geben
-        run: chmod +x gradlew
-
-      - name: Linux Paket (Deb) erstellen
-        run: ./gradlew :desktop:packageDeb
-
-      - name: Linux Artefakte hochladen
-        uses: actions/upload-artifact@v4
-        with:
-          name: Friedhofsender-Linux-Binaries
-          path: desktop/build/compose/binaries/main/
-
   build-macos:
     name: macOS Build
     runs-on: macos-latest
@@ -86,45 +28,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: macOS App & DMG erstellen
-        run: ./gradlew :desktop:packageDmg :desktop:packageApp
+        run: ./gradlew :desktop:package
 
       - name: macOS Artefakte hochladen
         uses: actions/upload-artifact@v4
         with:
           name: Friedhofsender-macOS-Binaries
           path: desktop/build/compose/binaries/main/
-
-  build-android:
-    name: Android Release Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Code auschecken
-        uses: actions/checkout@v4
-
-      - name: JDK einrichten
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Gradle Executable-Rechte setzen
-        run: chmod +x gradlew
-
-      - name: Keystore aus Secret wiederherstellen
-        run: |
-          mkdir -p app
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/my-release-key.jks
-
-      - name: Release APK bauen & signieren
-        run: |
-          ./gradlew :app:assembleRelease \
-            -PKEYSTORE_PASSWORD="${{ secrets.KEYSTORE_PASSWORD }}" \
-            -PKEY_ALIAS="${{ secrets.KEY_ALIAS }}" \
-            -PKEY_PASSWORD="${{ secrets.KEY_PASSWORD }}"
-
-      - name: Signierte APK als Artifact hochladen
-        uses: actions/upload-artifact@v4
-        with:
-          name: Friedhofsender-Android-Release
-          path: app/build/outputs/apk/release/app-release.apk
