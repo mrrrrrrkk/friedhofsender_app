@@ -1,53 +1,56 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
-    // 1. Target: Android
-    androidTarget()
-
-    // 2. Target: Desktop (Windows, Linux, macOS)
-    jvm("desktop")
+    jvm("jvmMain") {
+        withJava()
+    }
 
     sourceSets {
-        // Gemeinsamer Code für ALLE Plattformen (Windows, Linux, Android)
-        commonMain.dependencies {
-            // Coroutines für asynchronen Code
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-            
-            // Serialization für Groq JSON Responses
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+        val jvmMain by getting {
+            dependencies {
+                // Zugriff auf Logik und Data Models aus dem shared-Modul
+                implementation(project(":shared"))
 
-            // Ktor HTTP-Client (Plattformübergreifend)
-            implementation("io.ktor:ktor-client-core:2.3.11")
-            implementation("io.ktor:ktor-client-content-negotiation:2.3.11")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.11")
-        }
+                // Compose Desktop UI
+                implementation(compose.desktop.currentOs)
+                implementation(compose.material3)
+                implementation(compose.foundation)
+                implementation(compose.ui)
 
-        // Android-spezifische HTTP-Engine
-        androidMain.dependencies {
-            implementation("io.ktor:ktor-client-okhttp:2.3.11")
-        }
-
-        // Desktop-spezifische HTTP-Engine (Windows & Linux)
-        getByName("desktopMain").dependencies {
-            implementation("io.ktor:ktor-client-cio:2.3.11")
+                // Coroutines für Desktop
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.1")
+            }
         }
     }
 }
 
-android {
-    namespace = "de.friedhofsender.shared"
-    compileSdk = 34
+// Konfiguration für das Erstellen von nativen Windows- (.exe/.msi) und Linux-Paketen (.deb/.rpm)
+compose.desktop {
+    application {
+        mainClass = "de.friedhofsender.desktop.MainKt"
 
-    defaultConfig {
-        minSdk = 24
-    }
+        nativeDistributions {
+            targetFormats(
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, // Windows Installer
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, // Windows Portable/Exe
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb  // Linux Debian/Ubuntu
+            )
+            packageName = "FriedhofsenderDesktop"
+            packageVersion = "1.0.0"
+            description = "Friedhofsender Audio Companion für Windows & Linux"
+            copyright = "© 2026 Friedhofsender"
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+            // System-Tray & Fenster-Icon (kannst du später anpassen)
+            // windows {
+            //     iconFile.set(project.file("src/jvmMain/resources/icon.ico"))
+            // }
+            // linux {
+            //     iconFile.set(project.file("src/jvmMain/resources/icon.png"))
+            // }
+        }
     }
 }
