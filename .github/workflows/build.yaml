@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-windows:
-    runs-name: Windows Build
+    name: Windows Build
     runs-on: windows-latest
     steps:
       - name: Repository auschecken
@@ -33,7 +33,7 @@ jobs:
           path: desktop/build/compose/binaries/main/
 
   build-linux:
-    runs-name: Linux Build
+    name: Linux Build
     runs-on: ubuntu-latest
     steps:
       - name: Repository auschecken
