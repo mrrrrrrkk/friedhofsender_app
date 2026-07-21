@@ -1,5 +1,3 @@
-// app/build.gradle.kts
-
 import java.util.Properties
 
 plugins {
@@ -7,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
+    // Compose Compiler Plugin für Kotlin 2.0+
+    alias(libs.plugins.compose.compiler) optional
 }
 
 // local.properties laden
@@ -34,8 +34,9 @@ android {
         buildConfigField(
             "String",
             "GROQ_API_KEY",
-            "\"${localProps["GROQ_API_KEY"] ?: ""}\""
+            "\"${localProps["GROQ_API_KEY"] ?: System.getenv("GROQ_API_KEY") ?: ""}\""
         )
+    }
 
     signingConfigs {
         create("release") {
@@ -52,18 +53,18 @@ android {
     }
 
     buildTypes {
-            release {
-                isMinifyEnabled = false
-                signingConfig = signingConfigs.getByName("release") // <- Das hier hat gefehlt!
-                proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
-                )
-            }
-            debug {
-                isMinifyEnabled = false
-            }
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
+        debug {
+            isMinifyEnabled = false
+        }
+    }
 
     buildFeatures {
         compose = true
@@ -83,19 +84,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        jvmToolchain(17)
-    }
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
-}
 
 dependencies {
+    // Shared Multiplatform Modul eingebunden
+    implementation(project(":shared"))
+
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
@@ -129,26 +128,16 @@ dependencies {
 
     implementation("com.google.android.material:material:1.12.0")
 
-    // Retrofit
+    // Retrofit & OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
-    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // Media3 – EINHEITLICH
+    // Media3
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-exoplayer-hls:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
-
-    // MediaSessionCompat + PlaybackStateCompat + MediaButtonReceiver
-
-
     implementation("androidx.media:media:1.7.0")
-
-    implementation(project(":shared"))
-
 }
