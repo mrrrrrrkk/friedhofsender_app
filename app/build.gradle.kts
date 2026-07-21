@@ -74,6 +74,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+        // 💡 Deaktiviert den strengen Version-Mismatch-Check für Compose 1.5.15 & Kotlin 1.9.24
+        freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=1.9.24"
+        )
     }
 
     compileOptions {

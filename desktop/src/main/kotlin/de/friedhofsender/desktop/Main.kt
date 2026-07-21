@@ -22,7 +22,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -34,6 +33,24 @@ import javax.imageio.ImageIO
 import kotlin.math.roundToInt
 
 fun main() = application {
+    if (System.getProperty("os.name").lowercase().contains("win")) {
+        try {
+            val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream("logo.ico")
+                ?: Thread.currentThread().contextClassLoader.getResourceAsStream("icon.ico")
+            
+            if (resourceStream != null) {
+                val image = javax.imageio.ImageIO.read(resourceStream)
+                resourceStream.close()
+                if (image != null && java.awt.Taskbar.isTaskbarSupported()) {
+                    val taskbar = java.awt.Taskbar.getTaskbar()
+                    if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
+                        taskbar.iconImage = image
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
     val viewModel = remember { DesktopViewModel() }
     
     var isWindowVisible by remember { mutableStateOf(true) }
@@ -82,22 +99,28 @@ fun main() = application {
 
 private fun loadAppIconPainter(): Painter {
     return try {
-        val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream("icon.ico")
-            ?: Thread.currentThread().contextClassLoader.getResourceAsStream("/icon.ico")
+        val possibleNames = listOf(
+            "logo.ico", "/logo.ico",
+            "icon.ico", "/icon.ico",
+            "logo.png", "/logo.png",
+            "icon.png", "/icon.png"
+        )
+
+        var resourceStream: java.io.InputStream? = null
+        for (name in possibleNames) {
+            resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(name)
+                ?: object {}.javaClass.getResourceAsStream(name)
+            if (resourceStream != null) break
+        }
 
         if (resourceStream != null) {
             val bufferedImage = ImageIO.read(resourceStream)
+            resourceStream.close()
             androidx.compose.ui.graphics.painter.BitmapPainter(bufferedImage.toComposeImageBitmap())
         } else {
-            val file = File("desktop/src/jvmMain/resources/icon.ico")
-            if (file.exists()) {
-                val bufferedImage = ImageIO.read(file)
-                androidx.compose.ui.graphics.painter.BitmapPainter(bufferedImage.toComposeImageBitmap())
-            } else {
-                throw Exception("Icon Datei nicht gefunden")
-            }
+            throw Exception("Keines der Icons konnte geladen werden")
         }
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         object : Painter() {
             override val intrinsicSize = androidx.compose.ui.geometry.Size(64f, 64f)
             override fun DrawScope.onDraw() {

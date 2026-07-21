@@ -42,7 +42,6 @@ class MainViewModel @Inject constructor(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying
 
-    // ✅ Live Stream Status (unabhängig von Musik)
     private val _isLiveStreamPlaying = MutableStateFlow(true)
     val isLiveStreamPlaying: StateFlow<Boolean> = _isLiveStreamPlaying
 
@@ -61,12 +60,10 @@ class MainViewModel @Inject constructor(
     private val _isNoise = MutableStateFlow(false)
     val isNoise: StateFlow<Boolean> = _isNoise
 
-    // 💡 Neu: State für das Prompt-Thema (optional)
     private val _topicInput = MutableStateFlow("")
     val topicInput: StateFlow<String> = _topicInput
 
     init {
-        // ✅ Live Stream beim Start starten (OHNE Musik zu beeinflussen)
         startLiveStream()
         refreshNowPlaying()
         viewModelScope.launch {
@@ -77,7 +74,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // 💡 Neu: Methoden zur Steuerung des Prompt-Themas
     fun updateTopic(newTopic: String) {
         _topicInput.value = newTopic
     }
@@ -86,7 +82,6 @@ class MainViewModel @Inject constructor(
         _topicInput.value = ""
     }
 
-    // ✅ SAUBER: Live Stream Toggle - NUR Live Stream, KEINE Musik-Änderung
     fun toggleLiveStream() {
         if (_isLiveStreamPlaying.value) {
             stopLiveStream()
@@ -108,7 +103,6 @@ class MainViewModel @Inject constructor(
     }
 
     private fun stopLiveStream() {
-        // ✅ WICHTIG: Stoppe NUR den Live-Stream, NICHT die Musik!
         musicPlayer.stop(MusicPlayer.STREAM_TYPE_LIVE)
         _isLiveStreamPlaying.value = false
     }
@@ -132,7 +126,6 @@ class MainViewModel @Inject constructor(
         _isMuted.value = !_isMuted.value
         tts.setMute(_isMuted.value)
 
-        // ✅ Setze Volume für BEIDE Streams unabhängig
         val volume = if (_isMuted.value) 0f else _musicVolume.value
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_MUSIC)
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_LIVE)
@@ -141,7 +134,6 @@ class MainViewModel @Inject constructor(
     fun setMusicVolume(v: Float) {
         _musicVolume.value = v
         if (!_isMuted.value) {
-            // ✅ Setze Volume für BEIDE Streams
             musicPlayer.setVolume(v, MusicPlayer.STREAM_TYPE_MUSIC)
             musicPlayer.setVolume(v, MusicPlayer.STREAM_TYPE_LIVE)
         }
@@ -153,31 +145,36 @@ class MainViewModel @Inject constructor(
     }
 
     fun generate() {
-        val currentTopic = _topicInput.value
-        viewModelScope.launch {
-            _status.value = "Empfange..."
-            _isNoise.value = true
-            try {
-                // Übergibt den Themenwunsch (falls vorhanden) an den Prompt
-                val prompt = webRepository.getPrompt(currentTopic)
-                _text.value = groqRepository.generateBroadcast(prompt)
-            } catch (e: Exception) {
-                _text.value = "Übertragungsfehler."
-            } finally {
-                delay(1500)
-                _isNoise.value = false
-                _status.value = "Bereit."
+            val currentTopic = _topicInput.value
+            viewModelScope.launch {
+                _status.value = "Empfange..."
+                _isNoise.value = true
+                try {
+                    // Holt den Basis-Prompt und hängt das Thema im ViewModel an, 
+                    // falls dein WebRepository.getPrompt() keinen Parameter akzeptiert
+                    val basePrompt = webRepository.getPrompt()
+                    val prompt = if (currentTopic.isNotBlank()) {
+                        "$basePrompt Zusätzlicher Fokus/Themenwunsch für diese Ausgabe, der unbedingt integriert werden muss: \"$currentTopic\"."
+                    } else {
+                        basePrompt
+                    }
+                    
+                    _text.value = groqRepository.generateBroadcast(prompt)
+                } catch (e: Exception) {
+                    _text.value = "Übertragungsfehler."
+                } finally {
+                    delay(1500)
+                    _isNoise.value = false
+                    _status.value = "Bereit."
+                }
             }
         }
-    }
 
     fun toggleMusic() {
         if (_isPlaying.value) {
-            // ✅ Stoppe NUR die Musik, NICHT den Live-Stream
             musicPlayer.stop(MusicPlayer.STREAM_TYPE_MUSIC)
             _isPlaying.value = false
         } else {
-            // ✅ Starte Musik UNABHÄNGIG vom Live-Stream
             musicPlayer.playUrl(
                 webRepository.getMusicUrl(),
                 MusicPlayer.STREAM_TYPE_MUSIC
