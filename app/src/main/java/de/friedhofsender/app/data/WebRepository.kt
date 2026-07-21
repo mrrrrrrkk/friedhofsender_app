@@ -32,7 +32,7 @@ class WebRepository @Inject constructor() {
     suspend fun getPrompt(): String = withContext(Dispatchers.IO) {
         "Erzeuge eine neue Friedhofsdurchsage im nüchternen, leicht unheimlichen Stil. " +
                 "Behandle die Stadt als einen festen Ort mit einer fortlaufenden Geschichte. " +
-                "Die Stadtbewohner, Vorkommnisse, Ungewöhnliches, Piraten, Der Friedhof, Bekannte Orte, Nachrichten, " +
+                "Die Stadtbewohner, Vorkommnisse, Ungewöhnliches, Der Friedhof, Bekannte Orte, Nachrichten, " +
                 "Es ist gut und erwünscht, wenn bereits bekannte Personen oder Orte der Stadt erneut auftauchen, " +
                 "aber erzähle ihre Geschichte weiter oder füge ein neues, sinnvolles Detail hinzu. " +
                 "Alles muss Teil eines großen, zusammenhängenden Ganzen sein. " +

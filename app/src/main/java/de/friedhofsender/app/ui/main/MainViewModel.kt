@@ -61,6 +61,10 @@ class MainViewModel @Inject constructor(
     private val _isNoise = MutableStateFlow(false)
     val isNoise: StateFlow<Boolean> = _isNoise
 
+    // 💡 Neu: State für das Prompt-Thema (optional)
+    private val _topicInput = MutableStateFlow("")
+    val topicInput: StateFlow<String> = _topicInput
+
     init {
         // ✅ Live Stream beim Start starten (OHNE Musik zu beeinflussen)
         startLiveStream()
@@ -71,6 +75,15 @@ class MainViewModel @Inject constructor(
                 refreshNowPlaying()
             }
         }
+    }
+
+    // 💡 Neu: Methoden zur Steuerung des Prompt-Themas
+    fun updateTopic(newTopic: String) {
+        _topicInput.value = newTopic
+    }
+
+    fun clearTopic() {
+        _topicInput.value = ""
     }
 
     // ✅ SAUBER: Live Stream Toggle - NUR Live Stream, KEINE Musik-Änderung
@@ -140,11 +153,14 @@ class MainViewModel @Inject constructor(
     }
 
     fun generate() {
+        val currentTopic = _topicInput.value
         viewModelScope.launch {
             _status.value = "Empfange..."
             _isNoise.value = true
             try {
-                _text.value = groqRepository.generateBroadcast(webRepository.getPrompt())
+                // Übergibt den Themenwunsch (falls vorhanden) an den Prompt
+                val prompt = webRepository.getPrompt(currentTopic)
+                _text.value = groqRepository.generateBroadcast(prompt)
             } catch (e: Exception) {
                 _text.value = "Übertragungsfehler."
             } finally {

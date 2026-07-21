@@ -758,7 +758,7 @@ fun DesktopMainScreen(
                         OutlinedTextField(
                             value = topic,
                             onValueChange = { viewModel.topicInput.value = it },
-                            label = { Text("Prompt-Thema", color = Color(0xFFFF00FF), fontSize = 11.sp) },
+                            label = { Text("ThemenWunsch", color = Color(0xFFFF00FF), fontSize = 11.sp) },
                             placeholder = { Text("z.B. Nebel...", color = Color.Gray, fontSize = 11.sp) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,

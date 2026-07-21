@@ -9,6 +9,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,14 +33,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import de.friedhofsender.app.R
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
 
 private enum class LayoutSize { Compact, Medium, Expanded }
 
 /* ============================================================
-   GLITCH TEXT COMPOSABLE
+    GLITCH TEXT COMPOSABLE
 ============================================================ */
 @Composable
 private fun GlitchText(
@@ -83,7 +82,6 @@ private fun GlitchText(
     )
 
     Box(modifier = modifier) {
-        // Base text
         Text(
             text = text,
             color = color,
@@ -93,7 +91,6 @@ private fun GlitchText(
             letterSpacing = letterSpacing
         )
 
-        // Glitch layer 1 (Magenta)
         Text(
             text = text,
             color = Color(0xFFFF00FF).copy(alpha = glitchAlpha),
@@ -104,7 +101,6 @@ private fun GlitchText(
             modifier = Modifier.offset(x = glitchOffsetX * 1.5.dp, y = glitchOffsetY * 0.5.dp)
         )
 
-        // Glitch layer 2 (Cyan)
         Text(
             text = text,
             color = Color(0xFF00FFFF).copy(alpha = glitchAlpha * 0.6f),
@@ -379,7 +375,6 @@ fun rememberMainViewModel(): MainViewModel = hiltViewModel()
 
 @Composable
 fun MainScreen(viewModel: MainViewModel = rememberMainViewModel()) {
-
     val showIntro by viewModel.showIntro.collectAsState()
     val showTextOverlay by viewModel.showTextOverlay.collectAsState()
     val isNoise by viewModel.isNoise.collectAsState()
@@ -391,7 +386,6 @@ fun MainScreen(viewModel: MainViewModel = rememberMainViewModel()) {
             .fillMaxSize()
             .background(Color.Black)
     ) {
-
         if (!showIntro) {
             BackgroundFrame()
 
@@ -403,7 +397,6 @@ fun MainScreen(viewModel: MainViewModel = rememberMainViewModel()) {
         }
 
         BoxWithConstraints(Modifier.fillMaxSize()) {
-
             val layoutSize = when {
                 maxWidth < 600.dp -> LayoutSize.Compact
                 maxWidth < 840.dp -> LayoutSize.Medium
@@ -442,7 +435,6 @@ fun MainScreen(viewModel: MainViewModel = rememberMainViewModel()) {
 
 @Composable
 private fun IntroScreen(onDismiss: () -> Unit) {
-
     val bootScale = remember { Animatable(0.02f) }
     LaunchedEffect(Unit) {
         bootScale.animateTo(1f, tween(900, easing = FastOutSlowInEasing))
@@ -520,7 +512,6 @@ private fun IntroScreen(onDismiss: () -> Unit) {
                 }
             }
     ) {
-
         Image(
             painter = painterResource(id = R.drawable.schaltkasten_handy),
             contentDescription = null,
@@ -608,100 +599,6 @@ private fun IntroScreen(onDismiss: () -> Unit) {
     }
 }
 
-
-/* ============================================================
-   ANIMATED LIVE STREAM BUTTON
-============================================================ */
-
-/*
-@Composable
-private fun AnimatedLiveStreamButton(
-    isActive: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "liveButton")
-
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 0.9f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-
-    val shadowIntensity by infiniteTransition.animateFloat(
-        initialValue = 4f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shadowIntensity"
-    )
-
-    val scaleAnimation by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.02f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scaleAnimation"
-    )
-
-    val buttonColor = if (isActive) Color(0xFF00FF88) else Color(0xFFFF6B6B)
-
-    Box(
-        modifier = modifier
-            .height(26.dp)
-            .border(
-                1.5.dp,
-                buttonColor,
-                RoundedCornerShape(8.dp)
-            )
-            .graphicsLayer {
-                scaleX = if (isActive) scaleAnimation else 1f
-                scaleY = if (isActive) scaleAnimation else 1f
-            }
-            .shadow(
-                elevation = if (isActive) shadowIntensity.dp else 4.dp,
-                shape = RoundedCornerShape(8.dp),
-                ambientColor = buttonColor.copy(alpha = if (isActive) pulseAlpha * 0.5f else 0.2f),
-                spotColor = buttonColor.copy(alpha = if (isActive) pulseAlpha * 0.3f else 0.15f)
-            )
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .drawBehind {
-                drawRect(
-                    color = buttonColor.copy(alpha = if (isActive) pulseAlpha * 0.1f else 0.02f)
-                )
-
-                if (isActive) {
-                    for (i in 1..2) {
-                        val radius = size.maxDimension * (pulseAlpha + i * 0.15f)
-                        drawCircle(
-                            color = buttonColor.copy(alpha = (1f - pulseAlpha) * 0.1f),
-                            radius = radius,
-                            center = center
-                        )
-                    }
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        // Platzhalter für den Inhalt des Buttons/Elements:
-        Text(
-            text = "Button",
-            color = buttonColor
-        )
-    
-}
-}
-*/
-
 @Composable
 private fun ContentPanel(
     viewModel: MainViewModel,
@@ -715,7 +612,7 @@ private fun ContentPanel(
     val isSpeaking by viewModel.isSpeaking.collectAsState()
     val musicVolume by viewModel.musicVolume.collectAsState()
     val ttsVolume by viewModel.ttsVolume.collectAsState()
-    val isLiveStreamPlaying by viewModel.isLiveStreamPlaying.collectAsState()
+    val topicInput by viewModel.topicInput.collectAsState() // 💡 Prompt-Thema State
 
     val titleSize = when (layoutSize) {
         LayoutSize.Compact -> 24.sp
@@ -810,13 +707,6 @@ private fun ContentPanel(
                     AnimatedStatusIndicator()
 
                     Spacer(Modifier.width(8.dp))
-
-                    /*
-                    AnimatedLiveStreamButton(
-                        isActive = isLiveStreamPlaying,
-                        onClick = { viewModel.toggleLiveStream() }
-                    )
-                    */
                 }
 
                 Spacer(Modifier.height(2.dp))
@@ -865,6 +755,36 @@ private fun ContentPanel(
             AnimatedFancyButton(
                 text = "NEUE DURCHSAGE EMPFANGEN",
                 onClick = { viewModel.generate() }
+            )
+
+            // 💡 Prompt-Thema Eingabefeld im Cyberpunk-Stil
+            OutlinedTextField(
+                value = topicInput,
+                onValueChange = { viewModel.updateTopic(it) },
+                label = { Text("Wunschthema", color = Color(0xFFFF00FF), fontSize = 11.sp) },
+                placeholder = { Text("z.B. Nebel...", color = Color.Gray, fontSize = 11.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                trailingIcon = {
+                    if (topicInput.isNotBlank()) {
+                        IconButton(
+                            onClick = { viewModel.clearTopic() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Prompt löschen",
+                                tint = Color(0xFFFF00FF)
+                            )
+                        }
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFFF00FF),
+                    unfocusedBorderColor = Color(0xFF00FFFF),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
             )
 
             AnimatedNowPlayingWindow(nowPlaying)
@@ -937,7 +857,7 @@ private fun LandscapeContentPanel(
     val isSpeaking by viewModel.isSpeaking.collectAsState()
     val musicVolume by viewModel.musicVolume.collectAsState()
     val ttsVolume by viewModel.ttsVolume.collectAsState()
-    val isLiveStreamPlaying by viewModel.isLiveStreamPlaying.collectAsState()
+    val topicInput by viewModel.topicInput.collectAsState() // 💡 Prompt-Thema State
 
     val leftScrollState = rememberScrollState()
     val rightScrollState = rememberScrollState()
@@ -977,14 +897,6 @@ private fun LandscapeContentPanel(
                 AnimatedStatusIndicator()
 
                 Spacer(Modifier.width(6.dp))
-
-                /*
-                AnimatedLiveStreamButton(
-                    isActive = isLiveStreamPlaying,
-                    onClick = { viewModel.toggleLiveStream() },
-                    modifier = Modifier.width(90.dp)
-                )
-                */
             }
 
             Spacer(Modifier.height(6.dp))
@@ -1032,6 +944,37 @@ private fun LandscapeContentPanel(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             AnimatedFancyButton("NEUE DURCHSAGE", onClick = { viewModel.generate() })
+
+            // 💡 Prompt-Thema Eingabefeld auch im Querformat
+            OutlinedTextField(
+                value = topicInput,
+                onValueChange = { viewModel.updateTopic(it) },
+                label = { Text("Prompt-Thema", color = Color(0xFFFF00FF), fontSize = 10.sp) },
+                placeholder = { Text("z.B. Nebel...", color = Color.Gray, fontSize = 10.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                trailingIcon = {
+                    if (topicInput.isNotBlank()) {
+                        IconButton(
+                            onClick = { viewModel.clearTopic() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Prompt löschen",
+                                tint = Color(0xFFFF00FF)
+                            )
+                        }
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFFF00FF),
+                    unfocusedBorderColor = Color(0xFF00FFFF),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+
             AnimatedNowPlayingWindow(nowPlaying)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1333,18 +1276,15 @@ private fun AnimatedBottomControls(
     onTtsVolumeChange: (Float) -> Unit,
     knobSize: Dp
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             GlitchText(
                 text = "Musik",
                 color = Color(0xFFB0B0B0),
@@ -1365,7 +1305,6 @@ private fun AnimatedBottomControls(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             GlitchText(
                 text = "Durchsage",
                 color = Color(0xFFB0B0B0),
@@ -1408,7 +1347,6 @@ private fun AnimatedVolumeText(value: Float) {
 
 @Composable
 private fun AnimatedKnob(size: Dp, initialValue: Float, onValueChange: (Float) -> Unit) {
-
     var value by remember { mutableStateOf(initialValue.coerceIn(0f, 1f)) }
     var angle by remember { mutableStateOf(-135f + value * 270f) }
 
@@ -1466,7 +1404,6 @@ private fun AnimatedKnob(size: Dp, initialValue: Float, onValueChange: (Float) -
             },
         contentAlignment = Alignment.Center
     ) {
-
         Box(
             modifier = Modifier
                 .height(size / 3)
@@ -1498,7 +1435,6 @@ private fun TextOverlay(text: String, onClose: () -> Unit) {
             },
         contentAlignment = Alignment.Center
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
@@ -1515,7 +1451,6 @@ private fun TextOverlay(text: String, onClose: () -> Unit) {
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             GlitchText(
                 text = "ÜBERTRAGUNG",
                 color = Color(0xFF00FFFF),
