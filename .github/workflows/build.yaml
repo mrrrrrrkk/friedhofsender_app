@@ -1,4 +1,4 @@
-name: Friedhofsender Full Build (Windows, Linux, Android)
+name: Friedhofsender Full Build (Windows, Linux, macOS, Android)
 
 on:
   push:
@@ -28,10 +28,8 @@ jobs:
         shell: bash
         run: chmod +x gradlew
 
-      - name: Windows MSI & EXE paketieren (inkl. API-Key)
-        run: ./gradlew :desktop:packageMsi :desktop:packageExe -PGROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      - name: Windows MSI & EXE paketieren
+        run: ./gradlew :desktop:packageMsi :desktop:packageExe
 
       - name: Windows Artefakte hochladen
         uses: actions/upload-artifact@v4
@@ -61,15 +59,39 @@ jobs:
       - name: Gradle-Wrapper Ausführungsrechte geben
         run: chmod +x gradlew
 
-      - name: Linux Paket (Deb) erstellen (inkl. API-Key)
-        run: ./gradlew :desktop:packageDeb -PGROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      - name: Linux Paket (Deb) erstellen
+        run: ./gradlew :desktop:packageDeb
 
       - name: Linux Artefakte hochladen
         uses: actions/upload-artifact@v4
         with:
           name: Friedhofsender-Linux-Binaries
+          path: desktop/build/compose/binaries/main/
+
+  build-macos:
+    name: macOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Gradle-Wrapper Ausführungsrechte geben
+        run: chmod +x gradlew
+
+      - name: macOS App & DMG erstellen
+        run: ./gradlew :desktop:packageDmg :desktop:packageApp
+
+      - name: macOS Artefakte hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Friedhofsender-macOS-Binaries
           path: desktop/build/compose/binaries/main/
 
   build-android:
@@ -94,15 +116,12 @@ jobs:
           mkdir -p app
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/my-release-key.jks
 
-      - name: Release APK bauen & signieren (inkl. API-Key)
+      - name: Release APK bauen & signieren
         run: |
           ./gradlew :app:assembleRelease \
             -PKEYSTORE_PASSWORD="${{ secrets.KEYSTORE_PASSWORD }}" \
             -PKEY_ALIAS="${{ secrets.KEY_ALIAS }}" \
-            -PKEY_PASSWORD="${{ secrets.KEY_PASSWORD }}" \
-            -PGROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+            -PKEY_PASSWORD="${{ secrets.KEY_PASSWORD }}"
 
       - name: Signierte APK als Artifact hochladen
         uses: actions/upload-artifact@v4
