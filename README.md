@@ -1,1 +1,1 @@
-# Friedhofsender-Android-APP
+# Friedhofsender-Companion-App
