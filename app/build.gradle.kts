@@ -149,4 +149,6 @@ dependencies {
 
     implementation("androidx.media:media:1.7.0")
 
+    implementation(project(":shared"))
+
 }

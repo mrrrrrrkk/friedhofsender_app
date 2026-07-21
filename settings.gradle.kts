@@ -16,3 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "FriedhofsenderApp"
 include(":app")
+include(":shared")
+include(":desktop")
