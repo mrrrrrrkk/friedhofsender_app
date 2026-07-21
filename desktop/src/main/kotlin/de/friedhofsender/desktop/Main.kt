@@ -28,29 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.*
 import kotlinx.coroutines.delay
-import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
 
 fun main() = application {
-    if (System.getProperty("os.name").lowercase().contains("win")) {
-        try {
-            val resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream("logo.ico")
-                ?: Thread.currentThread().contextClassLoader.getResourceAsStream("icon.ico")
-            
-            if (resourceStream != null) {
-                val image = javax.imageio.ImageIO.read(resourceStream)
-                resourceStream.close()
-                if (image != null && java.awt.Taskbar.isTaskbarSupported()) {
-                    val taskbar = java.awt.Taskbar.getTaskbar()
-                    if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
-                        taskbar.iconImage = image
-                    }
-                }
-            }
-        } catch (_: Exception) {}
-    }
-
     val viewModel = remember { DesktopViewModel() }
     
     var isWindowVisible by remember { mutableStateOf(true) }
@@ -61,7 +42,7 @@ fun main() = application {
 
     Tray(
         icon = iconPainter,
-        tooltip = "Friedhofsender - Cyberpunk Terminal",
+        tooltip = "Friedhofsender Audio Companion",
         menu = {
             Item("Öffnen", onClick = { isWindowVisible = true })
             Item("Beenden", onClick = {
@@ -81,7 +62,7 @@ fun main() = application {
                     exitApplication()
                 }
             },
-            title = "Friedhofsender - Cyberpunk Desktop Terminal",
+            title = "Friedhofsender Audio Companion",
             state = windowState,
             icon = iconPainter
         ) {
