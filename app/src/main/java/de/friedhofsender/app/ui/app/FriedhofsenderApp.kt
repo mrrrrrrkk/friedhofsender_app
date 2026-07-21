@@ -1,7 +1,5 @@
 package de.friedhofsender.app
-
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-
 @HiltAndroidApp
-class FriedhofsenderAudioCompanion : Application()
+class FriedhofsenderApp : Application()

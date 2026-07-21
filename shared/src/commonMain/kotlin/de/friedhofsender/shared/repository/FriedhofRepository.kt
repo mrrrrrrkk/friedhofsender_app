@@ -1,5 +1,4 @@
 package de.friedhofsender.shared.repository
-
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -10,49 +9,27 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
 @Serializable
-data class GroqMessage(val role: String, val content: String)
-
+data class BroadcastRequest(val prompt: String)
 @Serializable
-data class GroqChatRequest(
-    val model: String = "llama-3.1-8b-instant",
-    val messages: List<GroqMessage>,
-    val temperature: Double = 0.8,
-    val max_tokens: Int = 2048
+data class BroadcastResponse(
+    val text: String? = null,
+    val error: String? = null
 )
-
-@Serializable
-data class GroqChoice(val message: GroqMessage)
-
-@Serializable
-data class GroqChatResponse(val choices: List<GroqChoice> = emptyList())
-
 @Serializable
 data class NowPlayingResponse(val current: String? = null)
-
-class FriedhofRepository(
-    private var apiKey: String = System.getenv("GROQ_API_KEY") ?: ""
-) {
+class FriedhofRepository {
     private val jsonParser = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true
     }
-
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(jsonParser)
         }
         expectSuccess = false
     }
-
-    fun setApiKey(key: String) {
-        if (key.isNotBlank()) {
-            this.apiKey = key
-        }
-    }
-
     suspend fun getNowPlaying(): String {
         return try {
             val response = client.get("https://www.friedhofsender.de/live/nowplaying.json") {
@@ -69,7 +46,6 @@ class FriedhofRepository(
             "Unbekannt"
         }
     }
-
     fun getPrompt(additionalTopic: String = ""): String {
         val basePrompt = "Erzeuge eine neue Friedhofsdurchsage im nüchternen, leicht unheimlichen Stil. " +
                 "Behandle die Stadt als einen festen Ort mit einer fortlaufenden Geschichte. " +
@@ -81,40 +57,30 @@ class FriedhofRepository(
                 "Zuhörer werden begrüßt und verabschiedet wie in einer seltsamen Radiosendung. " +
                 "Am Ende der Nachricht folgt eine kurze Geschichte über einen Stadtbewohner oder ein Ereignis. " +
                 "Schreibe mindestens 3-4 Absätze für eine gute Durchsage."
-
         return if (additionalTopic.isNotBlank()) {
             "$basePrompt Zusätzlicher Fokus/Themenwunsch für diese Ausgabe, der unbedingt integriert werden muss: \"$additionalTopic\"."
         } else {
             basePrompt
         }
     }
-
     suspend fun generateBroadcast(topic: String): String {
-        val currentKey = if (apiKey.isNotBlank()) apiKey else System.getenv("GROQ_API_KEY") ?: ""
-        if (currentKey.isBlank()) {
-            return "[FEHLER] Kein API-Key hinterlegt. Bitte setze die Umgebungsvariable GROQ_API_KEY."
-        }
-        
         val prompt = getPrompt(topic)
         return try {
-            val response = client.post("https://api.groq.com/openai/v1/chat/completions") {
+            val response = client.post("https://api.friedhofsender.de/generate") {
                 contentType(ContentType.Application.Json)
-                header("Authorization", "Bearer $currentKey")
-                setBody(GroqChatRequest(messages = listOf(GroqMessage("user", prompt))))
+                setBody(BroadcastRequest(prompt = prompt))
             }
-
             if (response.status.isSuccess()) {
                 val rawJson = response.bodyAsText()
-                val chatResponse = jsonParser.decodeFromString<GroqChatResponse>(rawJson)
-                chatResponse.choices.firstOrNull()?.message?.content ?: "Keine Antwort erhalten."
+                val broadcastResponse = jsonParser.decodeFromString<BroadcastResponse>(rawJson)
+                broadcastResponse.text ?: broadcastResponse.error ?: "Keine Antwort erhalten."
             } else {
                 val errorText = response.bodyAsText()
-                "[API-FEHLER ${response.status.value}] $errorText"
+                "[SERVER-FEHLER ${response.status.value}] $errorText"
             }
         } catch (e: Exception) {
-            "[NETZWERK-FEHLER] ${e.message}"
+            "[NETZWERK-FEHLER] Konnte api.friedhofsender.de nicht erreichen: ${e.message}"
         }
     }
-
     fun getMusicUrl(): String = "https://www.friedhofsender.de/live/stream.m3u8"
 }

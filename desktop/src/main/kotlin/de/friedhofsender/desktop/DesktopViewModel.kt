@@ -1,14 +1,11 @@
 package de.friedhofsender.desktop
-
 import de.friedhofsender.shared.repository.FriedhofRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-
 class DesktopViewModel {
     private val repository = FriedhofRepository()
     private val audioManager = DesktopAudioManager()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
     val text = MutableStateFlow("")
     val status = MutableStateFlow("Bereit.")
     val nowPlaying = MutableStateFlow("Lade Status...")
@@ -19,11 +16,9 @@ class DesktopViewModel {
     val ttsVolume = MutableStateFlow(0.8f)
     val isNoise = MutableStateFlow(false)
     val topicInput = MutableStateFlow("")
-
     init {
         audioManager.setMusicVolume(musicVolume.value)
         audioManager.setTtsVolume(ttsVolume.value)
-
         refreshNowPlaying()
         scope.launch {
             while (isActive) {
@@ -32,7 +27,6 @@ class DesktopViewModel {
             }
         }
     }
-
     fun generateBroadcast() {
         val currentTopic = topicInput.value
         scope.launch {
@@ -49,11 +43,9 @@ class DesktopViewModel {
             }
         }
     }
-
     fun clearTopic() {
         topicInput.value = ""
     }
-
     fun toggleSpeak() {
         if (isSpeaking.value) {
             audioManager.stopTTS()
@@ -67,7 +59,6 @@ class DesktopViewModel {
             }
         }
     }
-
     fun toggleMusic() {
         if (isPlaying.value) {
             audioManager.stopStream()
@@ -77,29 +68,24 @@ class DesktopViewModel {
             isPlaying.value = true
         }
     }
-
     fun toggleMute() {
         val newMuteState = !isMuted.value
         isMuted.value = newMuteState
         audioManager.setMute(newMuteState)
     }
-
     fun setMusicVolume(value: Float) {
         musicVolume.value = value
         audioManager.setMusicVolume(value)
     }
-
     fun setTtsVolume(value: Float) {
         ttsVolume.value = value
         audioManager.setTtsVolume(value)
     }
-
     private fun refreshNowPlaying() {
         scope.launch {
             nowPlaying.value = repository.getNowPlaying()
         }
     }
-
     fun onCloseApp() {
         audioManager.stopAllNativeProcesses()
     }

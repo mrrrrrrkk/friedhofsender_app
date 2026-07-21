@@ -1,5 +1,4 @@
 package de.friedhofsender.desktop
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -30,16 +29,12 @@ import androidx.compose.ui.window.*
 import kotlinx.coroutines.delay
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
-
 fun main() = application {
     val viewModel = remember { DesktopViewModel() }
-    
     var isWindowVisible by remember { mutableStateOf(true) }
     var minimizeToTrayEnabled by remember { mutableStateOf(false) }
     val windowState = rememberWindowState(width = 850.dp, height = 650.dp)
-
     val iconPainter = remember { loadAppIconPainter() }
-
     Tray(
         icon = iconPainter,
         tooltip = "Friedhofsender Audio Companion",
@@ -51,7 +46,6 @@ fun main() = application {
             })
         }
     )
-
     if (isWindowVisible) {
         Window(
             onCloseRequest = {
@@ -77,7 +71,6 @@ fun main() = application {
         }
     }
 }
-
 private fun loadAppIconPainter(): Painter {
     return try {
         val possibleNames = listOf(
@@ -86,14 +79,12 @@ private fun loadAppIconPainter(): Painter {
             "logo.png", "/logo.png",
             "icon.png", "/icon.png"
         )
-
         var resourceStream: java.io.InputStream? = null
         for (name in possibleNames) {
             resourceStream = Thread.currentThread().contextClassLoader.getResourceAsStream(name)
                 ?: object {}.javaClass.getResourceAsStream(name)
             if (resourceStream != null) break
         }
-
         if (resourceStream != null) {
             val bufferedImage = ImageIO.read(resourceStream)
             resourceStream.close()
@@ -110,7 +101,6 @@ private fun loadAppIconPainter(): Painter {
         }
     }
 }
-
 @Composable
 private fun GlitchText(
     text: String,
@@ -122,7 +112,6 @@ private fun GlitchText(
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "glitchText")
-
     val glitchOffsetX by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -132,7 +121,6 @@ private fun GlitchText(
         ),
         label = "glitchOffsetX"
     )
-
     val glitchOffsetY by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -142,7 +130,6 @@ private fun GlitchText(
         ),
         label = "glitchOffsetY"
     )
-
     val glitchAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
         targetValue = 0.4f,
@@ -152,7 +139,6 @@ private fun GlitchText(
         ),
         label = "glitchAlpha"
     )
-
     Box(modifier = modifier) {
         Text(
             text = text,
@@ -182,7 +168,6 @@ private fun GlitchText(
         )
     }
 }
-
 private fun Modifier.panelFrameAnimated(): Modifier = composed {
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val shadowAlpha by infiniteTransition.animateFloat(
@@ -194,7 +179,6 @@ private fun Modifier.panelFrameAnimated(): Modifier = composed {
         ),
         label = "alpha"
     )
-
     val glowScale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.015f,
@@ -204,7 +188,6 @@ private fun Modifier.panelFrameAnimated(): Modifier = composed {
         ),
         label = "glowScale"
     )
-
     this
         .border(
             width = 2.dp,
@@ -224,7 +207,6 @@ private fun Modifier.panelFrameAnimated(): Modifier = composed {
             scaleY = glowScale
         }
 }
-
 private fun Modifier.terminalWindowStyle(): Modifier = composed {
     this
         .background(Color(0xFF0A0510), RoundedCornerShape(14.dp))
@@ -243,7 +225,6 @@ private fun Modifier.terminalWindowStyle(): Modifier = composed {
         }
         .padding(14.dp)
 }
-
 private fun Modifier.innerGlow(): Modifier =
     this.drawBehind {
         drawRoundRect(
@@ -257,7 +238,6 @@ private fun Modifier.innerGlow(): Modifier =
             cornerRadius = CornerRadius(16f, 16f)
         )
     }
-
 @Composable
 private fun NoiseOverlay() {
     val infiniteTransition = rememberInfiniteTransition(label = "noise")
@@ -270,7 +250,6 @@ private fun NoiseOverlay() {
         ),
         label = "noiseAlpha"
     )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -287,7 +266,6 @@ private fun NoiseOverlay() {
             }
     )
 }
-
 @Composable
 fun AnimatedFancyButton(
     text: String,
@@ -308,7 +286,6 @@ fun AnimatedFancyButton(
         ),
         label = "glowAlpha"
     )
-
     val borderRotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
@@ -318,14 +295,11 @@ fun AnimatedFancyButton(
         ),
         label = "borderRotation"
     )
-
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
         label = "pressScale"
     )
-
     val activeColor = if (isActive) Color(0xFF00FFFF) else Color(0xFFFF00FF)
-
     Button(
         onClick = {
             isPressed = true
@@ -376,7 +350,6 @@ fun AnimatedFancyButton(
                         strokeWidth = scanLineHeight
                     )
                 }
-
                 if (isActive && enabled) {
                     for (i in 0..2) {
                         val progress = ((borderRotation + (i * 120)) % 360) / 360f
@@ -411,7 +384,6 @@ fun AnimatedFancyButton(
             letterSpacing = 0.5.sp
         )
     }
-
     LaunchedEffect(isPressed) {
         if (isPressed) {
             delay(200)
@@ -419,16 +391,12 @@ fun AnimatedFancyButton(
         }
     }
 }
-
 @Composable
 private fun AnimatedNowPlayingWindow(nowPlaying: String) {
     val displayText = if (nowPlaying.isBlank()) "–" else " >> $nowPlaying "
-
     var textWidth by remember(nowPlaying) { mutableStateOf(0f) }
     var boxWidth by remember { mutableStateOf(0f) }
-
     val infiniteTransition = rememberInfiniteTransition(label = "marquee")
-
     val offsetX by infiniteTransition.animateFloat(
         initialValue = boxWidth,
         targetValue = -textWidth,
@@ -441,7 +409,6 @@ private fun AnimatedNowPlayingWindow(nowPlaying: String) {
         ),
         label = "marqueeOffset"
     )
-
     val infiniteGlow = rememberInfiniteTransition(label = "marqueeGlow")
     val glowAlpha by infiniteGlow.animateFloat(
         initialValue = 0.6f,
@@ -452,7 +419,6 @@ private fun AnimatedNowPlayingWindow(nowPlaying: String) {
         ),
         label = "glowAlpha"
     )
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -498,7 +464,6 @@ private fun AnimatedNowPlayingWindow(nowPlaying: String) {
         )
     }
 }
-
 @Composable
 private fun AnimatedKnob(size: Dp, initialValue: Float, onValueChange: (Float) -> Unit) {
     var value by remember(initialValue) { mutableStateOf(initialValue.coerceIn(0f, 1f)) }
@@ -514,7 +479,6 @@ private fun AnimatedKnob(size: Dp, initialValue: Float, onValueChange: (Float) -
         ),
         label = "knobGlow"
     )
-
     Box(
         modifier = Modifier
             .size(size)
@@ -567,7 +531,6 @@ private fun AnimatedKnob(size: Dp, initialValue: Float, onValueChange: (Float) -
         )
     }
 }
-
 @Composable
 fun DesktopMainScreen(
     viewModel: DesktopViewModel,
@@ -583,9 +546,7 @@ fun DesktopMainScreen(
     val musicVol by viewModel.musicVolume.collectAsState()
     val ttsVol by viewModel.ttsVolume.collectAsState()
     val topic by viewModel.topicInput.collectAsState()
-
     val terminalScrollState = rememberScrollState()
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -593,7 +554,6 @@ fun DesktopMainScreen(
             .padding(12.dp)
     ) {
         val hideTerminal = maxWidth < 500.dp
-
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -629,7 +589,6 @@ fun DesktopMainScreen(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.2.sp
                             )
-
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -649,7 +608,6 @@ fun DesktopMainScreen(
                                     color = Color.LightGray,
                                     fontSize = 10.sp
                                 )
-
                                 TextButton(
                                     onClick = onManualMinimizeToTray,
                                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
@@ -660,11 +618,9 @@ fun DesktopMainScreen(
                             }
                         }
                     }
-
                     AnimatedNowPlayingWindow(nowPlaying)
                 }
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -698,7 +654,6 @@ fun DesktopMainScreen(
                         }
                     }
                 }
-
                 Card(
                     modifier = Modifier
                         .weight(if (hideTerminal) 1f else 1.3f)
@@ -723,12 +678,10 @@ fun DesktopMainScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
-
                         AnimatedFancyButton(
                             text = "NEUE DURCHSAGE EMPFANGEN",
                             onClick = { viewModel.generateBroadcast() }
                         )
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -745,7 +698,6 @@ fun DesktopMainScreen(
                                 Spacer(modifier = Modifier.height(2.dp))
                                 GlitchText("${(musicVol * 100).roundToInt()}%", Color(0xFF00FFFF), 11.sp, fontWeight = FontWeight.Bold)
                             }
-
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 GlitchText("Durchsage", Color(0xFFB0B0B0), 10.sp, fontWeight = FontWeight.W600)
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -758,7 +710,6 @@ fun DesktopMainScreen(
                                 GlitchText("${(ttsVol * 100).roundToInt()}%", Color(0xFF00FFFF), 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
-
                         OutlinedTextField(
                             value = topic,
                             onValueChange = { viewModel.topicInput.value = it },
@@ -787,20 +738,17 @@ fun DesktopMainScreen(
                                 unfocusedTextColor = Color.White
                             )
                         )
-
                         if (hideTerminal) {
                             AnimatedFancyButton(
                                 text = if (isSpeaking) "VORLESEN STOPPEN" else "VORLESEN",
                                 onClick = { viewModel.toggleSpeak() },
                                 isActive = isSpeaking
                             )
-
                             AnimatedFancyButton(
                                 text = if (isPlaying) "STOPP" else "START",
                                 onClick = { viewModel.toggleMusic() },
                                 isActive = isPlaying
                             )
-
                             AnimatedFancyButton(
                                 text = if (isMuted) "UNMUTE" else "MUTE",
                                 onClick = { viewModel.toggleMute() },
@@ -826,7 +774,6 @@ fun DesktopMainScreen(
                                     )
                                 }
                             }
-
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)

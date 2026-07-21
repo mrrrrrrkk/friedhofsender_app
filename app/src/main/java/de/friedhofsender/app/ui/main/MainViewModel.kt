@@ -1,5 +1,4 @@
 package de.friedhofsender.app.ui.main
-
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 @HiltViewModel
 class MainViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -23,46 +21,32 @@ class MainViewModel @Inject constructor(
     private val groqRepository: GroqRepository,
     private val tts: TtsController
 ) : ViewModel() {
-
     private val _isSpeaking = MutableStateFlow(false)
     val isSpeaking: StateFlow<Boolean> = _isSpeaking
-
     private val _isMuted = MutableStateFlow(false)
     val isMuted: StateFlow<Boolean> = _isMuted
-
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text
-
     private val _status = MutableStateFlow("Bereit.")
     val status: StateFlow<String> = _status
-
     private val _nowPlaying = MutableStateFlow("")
     val nowPlaying: StateFlow<String> = _nowPlaying
-
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying
-
     private val _isLiveStreamPlaying = MutableStateFlow(true)
     val isLiveStreamPlaying: StateFlow<Boolean> = _isLiveStreamPlaying
-
     private val _musicVolume = MutableStateFlow(0.33f)
     val musicVolume: StateFlow<Float> = _musicVolume
-
     private val _ttsVolume = MutableStateFlow(0.8f)
     val ttsVolume: StateFlow<Float> = _ttsVolume
-
     private val _showIntro = MutableStateFlow(true)
     val showIntro: StateFlow<Boolean> = _showIntro
-
     private val _showTextOverlay = MutableStateFlow(false)
     val showTextOverlay: StateFlow<Boolean> = _showTextOverlay
-
     private val _isNoise = MutableStateFlow(false)
     val isNoise: StateFlow<Boolean> = _isNoise
-
     private val _topicInput = MutableStateFlow("")
     val topicInput: StateFlow<String> = _topicInput
-
     init {
         startLiveStream()
         refreshNowPlaying()
@@ -73,15 +57,12 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
     fun updateTopic(newTopic: String) {
         _topicInput.value = newTopic
     }
-
     fun clearTopic() {
         _topicInput.value = ""
     }
-
     fun toggleLiveStream() {
         if (_isLiveStreamPlaying.value) {
             stopLiveStream()
@@ -89,7 +70,6 @@ class MainViewModel @Inject constructor(
             startLiveStream()
         }
     }
-
     private fun startLiveStream() {
         musicPlayer.playUrl(
             webRepository.getLiveStreamUrl(),
@@ -101,12 +81,10 @@ class MainViewModel @Inject constructor(
         )
         _isLiveStreamPlaying.value = true
     }
-
     private fun stopLiveStream() {
         musicPlayer.stop(MusicPlayer.STREAM_TYPE_LIVE)
         _isLiveStreamPlaying.value = false
     }
-
     fun handleSpeakAction() {
         if (_isSpeaking.value) {
             tts.stop()
@@ -121,7 +99,6 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
     fun toggleMute() {
         _isMuted.value = !_isMuted.value
         tts.setMute(_isMuted.value)
@@ -130,7 +107,6 @@ class MainViewModel @Inject constructor(
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_MUSIC)
         musicPlayer.setVolume(volume, MusicPlayer.STREAM_TYPE_LIVE)
     }
-
     fun setMusicVolume(v: Float) {
         _musicVolume.value = v
         if (!_isMuted.value) {
@@ -138,12 +114,10 @@ class MainViewModel @Inject constructor(
             musicPlayer.setVolume(v, MusicPlayer.STREAM_TYPE_LIVE)
         }
     }
-
     fun setTtsVolume(v: Float) {
         _ttsVolume.value = v
         if (!_isMuted.value) tts.setVolume(v)
     }
-
     fun generate() {
             val currentTopic = _topicInput.value
             viewModelScope.launch {
@@ -157,8 +131,7 @@ class MainViewModel @Inject constructor(
                         "$basePrompt Zusätzlicher Fokus/Themenwunsch für diese Ausgabe, der unbedingt integriert werden muss: \"$currentTopic\"."
                     } else {
                         basePrompt
-                    }
-                    
+                    }            
                     _text.value = groqRepository.generateBroadcast(prompt)
                 } catch (e: Exception) {
                     _text.value = "Übertragungsfehler."
@@ -169,7 +142,6 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-
     fun toggleMusic() {
         if (_isPlaying.value) {
             musicPlayer.stop(MusicPlayer.STREAM_TYPE_MUSIC)
@@ -186,7 +158,6 @@ class MainViewModel @Inject constructor(
             _isPlaying.value = true
         }
     }
-
     private fun refreshNowPlaying() {
         viewModelScope.launch {
             try {
@@ -196,19 +167,15 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
     fun dismissIntro() {
         _showIntro.value = false
     }
-
     fun openTextOverlay() {
         _showTextOverlay.value = true
     }
-
     fun closeTextOverlay() {
         _showTextOverlay.value = false
     }
-
     override fun onCleared() {
         tts.shutdown()
         super.onCleared()

@@ -12,7 +12,6 @@ pluginManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
@@ -21,7 +20,6 @@ dependencyResolutionManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
-
 rootProject.name = "FriedhofsenderApp"
 include(":app")
 include(":shared")

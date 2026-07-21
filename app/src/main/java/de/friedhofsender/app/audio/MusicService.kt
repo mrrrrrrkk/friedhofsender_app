@@ -1,5 +1,4 @@
 package de.friedhofsender.app.audio
-
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -28,50 +27,36 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import de.friedhofsender.app.R
 import java.util.concurrent.atomic.AtomicBoolean
-
 class MusicService : Service() {
-
     companion object {
         const val CHANNEL_ID = "friedhofsender_audio"
         const val NOTIFICATION_ID = 1
-
         const val ACTION_START = "START"
         const val ACTION_STOP = "STOP"
         const val ACTION_VOLUME = "VOLUME"
-
         const val EXTRA_URL = "URL"
         const val EXTRA_VOLUME = "VOLUME"
         const val EXTRA_TITLE = "TITLE"
         const val EXTRA_STREAM_TYPE = "STREAM_TYPE"
-
         const val STREAM_TYPE_MUSIC = "music"
         const val STREAM_TYPE_LIVE = "live"
     }
-
     private var musicPlayer: ExoPlayer? = null
     private var liveStreamPlayer: ExoPlayer? = null
-
     private lateinit var mediaSession: MediaSessionCompat
-
     private var currentTitle: String = "Friedhofsender"
-
     private val mainHandler = Handler(Looper.getMainLooper())
     private var retryDelay = 2000L
-
     private val isForegroundStarted = AtomicBoolean(false)
     private val isServiceDestroyed = AtomicBoolean(false)
-
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         createMediaSession()
         registerNetworkCallback()
     }
-
     override fun onBind(intent: Intent?): IBinder? = null
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         try {
             if (!isForegroundStarted.getAndSet(true)) {
                 startForeground(
@@ -84,41 +69,32 @@ class MusicService : Service() {
             isForegroundStarted.set(false)
             return START_STICKY
         }
-
         if (intent != null) {
             try {
                 MediaButtonReceiver.handleIntent(mediaSession, intent)
             } catch (_: Exception) {
             }
-
             val streamType = intent.getStringExtra(EXTRA_STREAM_TYPE) ?: STREAM_TYPE_MUSIC
-
             when (intent.action) {
-
                 ACTION_START -> {
                     val url = intent.getStringExtra(EXTRA_URL) ?: return START_STICKY
                     currentTitle = intent.getStringExtra(EXTRA_TITLE) ?: "Friedhofsender"
-
                     if (streamType == STREAM_TYPE_LIVE) {
                         startLiveStream(url)
                     } else {
                         startPlayer(url)
                     }
-
                     updatePlaybackState()
                     updateNotification()
                 }
-
                 ACTION_STOP -> {
                     if (streamType == STREAM_TYPE_LIVE) {
                         stopLiveStream()
                     } else {
                         stopPlayer()
                     }
-
                     updatePlaybackState()
                     updateNotification()
-
                     if (musicPlayer == null && liveStreamPlayer == null) {
                         try {
                             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -128,7 +104,6 @@ class MusicService : Service() {
                         stopSelf()
                     }
                 }
-
                 ACTION_VOLUME -> {
                     val vol = intent.getFloatExtra(EXTRA_VOLUME, 1f)
                     if (streamType == STREAM_TYPE_LIVE) {
@@ -139,14 +114,10 @@ class MusicService : Service() {
                 }
             }
         }
-
         return START_STICKY
     }
-
     private fun startPlayer(url: String) {
-
         if (musicPlayer == null) {
-
             val loadControl = DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
                     5000,
@@ -155,11 +126,9 @@ class MusicService : Service() {
                     3000
                 )
                 .build()
-
             musicPlayer = ExoPlayer.Builder(this)
                 .setLoadControl(loadControl)
                 .build()
-
             musicPlayer!!.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -168,20 +137,15 @@ class MusicService : Service() {
                     .build(),
                 true
             )
-
             mediaSession.isActive = true
-
             musicPlayer!!.addListener(object : Player.Listener {
-
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     updatePlaybackState()
                     updateNotification()
                 }
-
                 override fun onPlayerError(error: PlaybackException) {
                     android.util.Log.e("MusicService", "Music playback error: ${error.message}")
                     musicPlayer?.playWhenReady = false
-
                     val cause = error.cause
                     if (cause !is androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) {
                         mainHandler.postDelayed({
@@ -200,12 +164,10 @@ class MusicService : Service() {
                 }
             })
         }
-
         val mediaItem = MediaItem.Builder()
             .setUri(url)
             .setMimeType("application/x-mpegURL")
             .build()
-
         musicPlayer!!.apply {
             stop()
             clearMediaItems()
@@ -213,12 +175,10 @@ class MusicService : Service() {
             prepare()
             playWhenReady = true
         }
-
         updateMetadata()
         updatePlaybackState()
         updateNotification()
     }
-
     private fun stopPlayer() {
         try {
             musicPlayer?.stop()
@@ -231,11 +191,8 @@ class MusicService : Service() {
         } catch (_: Exception) {
         }
     }
-
     private fun startLiveStream(url: String) {
-
         if (liveStreamPlayer == null) {
-
             val loadControl = DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
                     2000,
@@ -244,11 +201,9 @@ class MusicService : Service() {
                     2000
                 )
                 .build()
-
             liveStreamPlayer = ExoPlayer.Builder(this)
                 .setLoadControl(loadControl)
                 .build()
-
             liveStreamPlayer!!.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_ASSISTANT)
@@ -257,18 +212,14 @@ class MusicService : Service() {
                     .build(),
                 false
             )
-
             liveStreamPlayer!!.addListener(object : Player.Listener {
-
                 override fun onPlayerError(error: PlaybackException) {
                     android.util.Log.e("MusicService", "Live stream playback error: ${error.message}")
                     liveStreamPlayer?.playWhenReady = false
-
                     val cause = error.cause
                     val shouldRetry = cause is androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException ||
                             cause is java.io.IOException ||
                             cause is java.net.SocketTimeoutException
-
                     if (shouldRetry) {
                         mainHandler.postDelayed({
                             try {
@@ -285,12 +236,10 @@ class MusicService : Service() {
                 }
             })
         }
-
         val mediaItem = MediaItem.Builder()
             .setUri(url)
             .setMimeType("application/x-mpegURL")
             .build()
-
         liveStreamPlayer!!.apply {
             stop()
             clearMediaItems()
@@ -298,10 +247,8 @@ class MusicService : Service() {
             prepare()
             playWhenReady = true
         }
-
         android.util.Log.d("MusicService", "Starting live stream: $url")
     }
-
     private fun stopLiveStream() {
         try {
             liveStreamPlayer?.apply {
@@ -313,7 +260,6 @@ class MusicService : Service() {
         }
         liveStreamPlayer = null
     }
-
     override fun onDestroy() {
         isServiceDestroyed.set(true)
         stopPlayer()
@@ -324,7 +270,6 @@ class MusicService : Service() {
         }
         super.onDestroy()
     }
-
     override fun onTaskRemoved(rootIntent: Intent?) {
         isServiceDestroyed.set(true)
         stopPlayer()
@@ -337,12 +282,9 @@ class MusicService : Service() {
         stopSelf()
         super.onTaskRemoved(rootIntent)
     }
-
     private fun createMediaSession() {
         mediaSession = MediaSessionCompat(this, "FriedhofsenderSession")
-
         mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-
             override fun onPlay() {
                 try {
                     musicPlayer?.playWhenReady = true
@@ -351,7 +293,6 @@ class MusicService : Service() {
                 } catch (_: Exception) {
                 }
             }
-
             override fun onPause() {
                 try {
                     musicPlayer?.playWhenReady = false
@@ -360,7 +301,6 @@ class MusicService : Service() {
                 } catch (_: Exception) {
                 }
             }
-
             override fun onStop() {
                 try {
                     stopPlayer()
@@ -370,14 +310,12 @@ class MusicService : Service() {
             }
         })
     }
-
     private fun updateMetadata() {
         try {
             val coverBitmap = BitmapFactory.decodeResource(
                 resources,
                 R.drawable.hintergrundfriedhofsender
             )
-
             val metadata = MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentTitle)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Friedhofsender")
@@ -388,10 +326,8 @@ class MusicService : Service() {
         } catch (_: Exception) {
         }
     }
-
     private fun buildPlaybackState(): PlaybackStateCompat {
         val isPlaying = musicPlayer?.isPlaying == true
-
         return PlaybackStateCompat.Builder()
             .setActions(
                 PlaybackStateCompat.ACTION_PLAY or
@@ -407,18 +343,14 @@ class MusicService : Service() {
             )
             .build()
     }
-
     private fun updatePlaybackState() {
         try {
             mediaSession.setPlaybackState(buildPlaybackState())
         } catch (_: Exception) {
         }
     }
-
     private fun buildNotification(): Notification {
-
         val isPlaying = musicPlayer?.isPlaying == true
-
         val playPauseAction = if (isPlaying) {
             NotificationCompat.Action(
                 android.R.drawable.ic_media_pause,
@@ -438,12 +370,10 @@ class MusicService : Service() {
                 )
             )
         }
-
         val coverBitmap = BitmapFactory.decodeResource(
             resources,
             R.drawable.hintergrundfriedhofsender
         )
-
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Friedhofsender")
             .setContentText(currentTitle.ifBlank { "NOW PLAYING: –" })
@@ -459,7 +389,6 @@ class MusicService : Service() {
             )
             .build()
     }
-
     private fun updateNotification() {
         try {
             val manager = getSystemService(NotificationManager::class.java)
@@ -467,7 +396,6 @@ class MusicService : Service() {
         } catch (_: Exception) {
         }
     }
-
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -480,7 +408,6 @@ class MusicService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
     }
-
     private fun registerNetworkCallback() {
         try {
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -491,11 +418,9 @@ class MusicService : Service() {
                         liveStreamPlayer?.playWhenReady = false
                     }
                 }
-
                 override fun onAvailable(network: Network) {
                     mainHandler.post {
                         if (isServiceDestroyed.get()) return@post
-
                         try {
                             musicPlayer?.let { p ->
                                 if (p.playbackState == Player.STATE_IDLE ||
@@ -511,7 +436,6 @@ class MusicService : Service() {
                                     }, 1500)
                                 }
                             }
-
                             liveStreamPlayer?.let { p ->
                                 if (p.playbackState == Player.STATE_IDLE ||
                                     p.playbackState == Player.STATE_BUFFERING

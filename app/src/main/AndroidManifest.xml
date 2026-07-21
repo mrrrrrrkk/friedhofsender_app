@@ -1,14 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.friedhofsender.app">
-
-    <!-- Internet für Stream -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Hintergrund‑Audio & stabile Wiedergabe -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-
+    
     <application
         android:name=".FriedhofsenderApp"
         android:allowBackup="true"
@@ -25,14 +21,12 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
 
-        <!-- Foreground-Audio-Service -->
+        </activity>
         <service
             android:name=".audio.MusicService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
-
     </application>
 
 </manifest>
