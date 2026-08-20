@@ -108,28 +108,3 @@ jobs:
           name: Friedhofsender-Android-Release
           path: app/build/outputs/apk/release/app-release.apk
           path: desktop/build/compose/binaries/main/  
-          
-  build-macos:
-    name: macOS Build
-    runs-on: macos-latest
-    steps:
-      - name: Repository auschecken
-        uses: actions/checkout@v4
-
-      - name: JDK einrichten
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Gradle-Wrapper Ausführungsrechte geben
-        run: chmod +x gradlew
-
-      - name: macOS App & DMG erstellen
-        run: ./gradlew :desktop:package
-
-      - name: macOS Artefakte hochladen
-        uses: actions/upload-artifact@v4
-        with:
-          name: Friedhofsender-macOS-Binaries
