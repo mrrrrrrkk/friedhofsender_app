@@ -12,7 +12,7 @@ class GroqRepository @Inject constructor(
         try {
             Log.d("GROQ", "Sende Prompt: $prompt")
             val request = GroqChatRequest(
-                model = "llama-3.1-8b-instant",
+                model = "openai/gpt-oss-20b",
                 messages = listOf(GroqMessage("user", prompt))
             )
             val response = api.createChatCompletion(request)
