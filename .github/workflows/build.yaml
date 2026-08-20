@@ -107,4 +107,3 @@ jobs:
         with:
           name: Friedhofsender-Android-Release
           path: app/build/outputs/apk/release/app-release.apk
-          path: desktop/build/compose/binaries/main/  
